@@ -317,6 +317,13 @@ async function runScan(){
 }
 
 // ── CHEAPER ALTERNATIVES ──
+function handleAltClick(btn){
+  const idx=btn.getAttribute('data-idx');
+  const name=btn.getAttribute('data-name');
+  const amount=btn.getAttribute('data-amount');
+  const category=btn.getAttribute('data-category');
+  fetchAlternatives(idx,name,amount,category);
+}
 async function fetchAlternatives(idx, name, amount, category) {
   const panel = document.getElementById('alt-panel-'+idx);
   const btn   = document.getElementById('alt-btn-'+idx);
@@ -394,7 +401,7 @@ function renderResults(r){
             ${s.lastCharge?`<span class="freq-tag">last: ${esc(s.lastCharge)}</span>`:''}
           </div>
           <div class="sub-reason">${esc(s.cancelReason)}</div>
-          <button class="alt-btn" id="alt-btn-${i}" onclick="fetchAlternatives(${i},${JSON.stringify(s.name)},${s.amount},${JSON.stringify(s.category)})">
+          <button class="alt-btn" id="alt-btn-${i}" data-idx="${i}" data-name="${esc(s.name)}" data-amount="${s.amount}" data-category="${esc(s.category)}" onclick="handleAltClick(this)">
             <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M6 2l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
             <span class="alt-btn-text">Find cheaper alternatives</span>
           </button>
