@@ -5,7 +5,7 @@ exports.handler = async (event) => {
 
   const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
   if (!ANTHROPIC_API_KEY) {
-    return { statusCode: 500, body: JSON.stringify({ error: 'API key not configured on server' }) };
+    return { statusCode: 500, body: JSON.stringify({ error: 'API key not configured on server. Add ANTHROPIC_API_KEY in Netlify environment variables.' }) };
   }
 
   let body;
@@ -17,7 +17,6 @@ exports.handler = async (event) => {
 
   const { image, text } = body;
 
-  // Build the user message
   let userMessage;
   if (image) {
     userMessage = {
@@ -59,14 +58,25 @@ Categories: Entertainment, Music, Shopping, Design, AI Tools, Productivity, Stor
       })
     });
 
-    const apiData = await apiRes.json();
+    const rawText = await apiRes.text();
+    let apiData;
+    try {
+      apiData = JSON.parse(rawText);
+    } catch {
+      return { statusCode: 502, body: JSON.stringify({ error: 'Image may be too large for the API. Try a cleaner screenshot or paste transaction text instead.' }) };
+    }
 
     if (apiData.error) {
-      return { statusCode: 502, body: JSON.stringify({ error: apiData.error.message || 'API error' }) };
+      return { statusCode: 502, body: JSON.stringify({ error: apiData.error.message || 'Anthropic API error' }) };
     }
 
     const raw = (apiData.content || []).find(b => b.type === 'text')?.text || '';
-    const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
+    let parsed;
+    try {
+      parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
+    } catch {
+      return { statusCode: 502, body: JSON.stringify({ error: 'Could not parse AI response. Try again or paste transaction text.' }) };
+    }
 
     return {
       statusCode: 200,

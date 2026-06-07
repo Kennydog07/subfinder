@@ -305,7 +305,9 @@ async function runScan(){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify(body)
     });
-    const data=await res.json();
+    const rawText=await res.text();
+    let data;
+    try{data=JSON.parse(rawText);}catch{throw new Error('Function not reachable — check netlify/functions/scan.js is deployed and ANTHROPIC_API_KEY is set in Netlify env vars');}
     if(data.error)throw new Error(data.error);
     renderResults(data);
   }catch(err){
@@ -336,7 +338,9 @@ async function fetchAlternatives(idx, name, amount, category) {
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({name,amount,category})
     });
-    const data=await res.json();
+    const rawText=await res.text();
+    let data;
+    try{data=JSON.parse(rawText);}catch{throw new Error('Function not reachable');}
     if(data.error)throw new Error(data.error);
     panel.innerHTML=`
       <div class="alt-panel-label">💡 Cheaper alternatives to ${esc(name)}</div>
