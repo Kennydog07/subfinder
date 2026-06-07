@@ -394,7 +394,7 @@ function renderResults(r){
             ${s.lastCharge?`<span class="freq-tag">last: ${esc(s.lastCharge)}</span>`:''}
           </div>
           <div class="sub-reason">${esc(s.cancelReason)}</div>
-          <button class="alt-btn" id="alt-btn-${i}" onclick="fetchAlternatives(${i},${JSON.stringify(esc(s.name))},${s.amount},${JSON.stringify(esc(s.category))})">
+          <button class="alt-btn" id="alt-btn-${i}" onclick="fetchAlternatives(${i},${JSON.stringify(s.name)},${s.amount},${JSON.stringify(s.category)})">
             <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6h8M6 2l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
             <span class="alt-btn-text">Find cheaper alternatives</span>
           </button>
