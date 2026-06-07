@@ -1,34 +1,25 @@
-exports.handler = async (event) => {
+const handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
   }
 
   const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
   if (!ANTHROPIC_API_KEY) {
-    return { statusCode: 500, body: JSON.stringify({ error: 'API key not configured on server. Add ANTHROPIC_API_KEY in Netlify environment variables.' }) };
+    return { statusCode: 500, body: JSON.stringify({ error: 'ANTHROPIC_API_KEY not set in Netlify environment variables.' }) };
   }
 
   let body;
-  try {
-    body = JSON.parse(event.body);
-  } catch {
-    return { statusCode: 400, body: JSON.stringify({ error: 'Invalid request body' }) };
-  }
+  try { body = JSON.parse(event.body); }
+  catch { return { statusCode: 400, body: JSON.stringify({ error: 'Invalid request body' }) }; }
 
   const { image, text } = body;
-
   let userMessage;
+
   if (image) {
-    userMessage = {
-      role: 'user',
-      content: [
-        {
-          type: 'image',
-          source: { type: 'base64', media_type: image.mediaType, data: image.base64 }
-        },
-        { type: 'text', text: 'This is a bank statement. Identify all recurring subscriptions and return the JSON as instructed.' }
-      ]
-    };
+    userMessage = { role: 'user', content: [
+      { type: 'image', source: { type: 'base64', media_type: image.mediaType, data: image.base64 } },
+      { type: 'text', text: 'This is a bank statement. Identify all recurring subscriptions and return the JSON as instructed.' }
+    ]};
   } else if (text) {
     userMessage = { role: 'user', content: 'Bank statement data:\n\n' + text };
   } else {
@@ -60,11 +51,8 @@ Categories: Entertainment, Music, Shopping, Design, AI Tools, Productivity, Stor
 
     const rawText = await apiRes.text();
     let apiData;
-    try {
-      apiData = JSON.parse(rawText);
-    } catch {
-      return { statusCode: 502, body: JSON.stringify({ error: 'Image may be too large for the API. Try a cleaner screenshot or paste transaction text instead.' }) };
-    }
+    try { apiData = JSON.parse(rawText); }
+    catch { return { statusCode: 502, body: JSON.stringify({ error: 'Image may be too large. Try a cleaner screenshot or paste text instead.' }) }; }
 
     if (apiData.error) {
       return { statusCode: 502, body: JSON.stringify({ error: apiData.error.message || 'Anthropic API error' }) };
@@ -72,18 +60,13 @@ Categories: Entertainment, Music, Shopping, Design, AI Tools, Productivity, Stor
 
     const raw = (apiData.content || []).find(b => b.type === 'text')?.text || '';
     let parsed;
-    try {
-      parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
-    } catch {
-      return { statusCode: 502, body: JSON.stringify({ error: 'Could not parse AI response. Try again or paste transaction text.' }) };
-    }
+    try { parsed = JSON.parse(raw.replace(/```json|```/g, '').trim()); }
+    catch { return { statusCode: 502, body: JSON.stringify({ error: 'Could not parse AI response. Try again or paste transaction text.' }) }; }
 
-    return {
-      statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(parsed)
-    };
+    return { statusCode: 200, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(parsed) };
   } catch (err) {
     return { statusCode: 500, body: JSON.stringify({ error: err.message || 'Server error' }) };
   }
 };
+
+module.exports = { handler };
